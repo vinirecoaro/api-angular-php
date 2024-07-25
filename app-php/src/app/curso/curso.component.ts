@@ -16,6 +16,8 @@ export class CursoComponent implements OnInit {
   //vetor de cursos
   vetor : Curso[] = [];
 
+  curso = new Curso();
+
   constructor(private cursoService : CursoService) { }
 
   ngOnInit(): void {
@@ -24,7 +26,17 @@ export class CursoComponent implements OnInit {
 
   //Cadastro
   cadastro(){
-    alert("Cadastro")
+    this.cursoService.cadastrarCurso(this.curso).subscribe(
+      (res:Curso[]) => {
+
+        //Adicionando dados ao vetor
+        this.vetor = res
+
+        //Limpar os atributos
+        this.curso.nomeCurso = null
+        this.curso.valorCurso = null
+      }
+    )
   }
 
   //Seleção
@@ -44,7 +56,14 @@ export class CursoComponent implements OnInit {
 
   //Remover
   remover(){
-    alert("Remover")
+    this.cursoService.removerCurso(this.curso).subscribe(
+      (res : Curso[]) => {
+        this.vetor = res;
+
+        this.curso.nomeCurso = null
+        this.curso.valorCurso = null
+      }
+    )
   }
 
 }

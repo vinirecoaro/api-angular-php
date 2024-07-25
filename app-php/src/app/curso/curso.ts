@@ -1,14 +1,11 @@
 export class Curso {
-    nomeCurso: string;
-    valorCurso: number;
-    idCurso?: number;
-  
-    constructor(nomeCurso: string = '', valorCurso: number = 0, idCurso?: number) {
-      this.nomeCurso = nomeCurso;
-      this.valorCurso = valorCurso;
-      if (idCurso !== undefined) {
-        this.idCurso = idCurso;
-      }
-    }
+  nomeCurso: string | null;
+  valorCurso: number | null;
+  idCurso?: number | null;
+
+  constructor(nomeCurso: string | null = null, valorCurso: number | null = null, idCurso?: number | null) {
+    this.nomeCurso = nomeCurso;
+    this.valorCurso = valorCurso;
+    this.idCurso = idCurso;
   }
-  
+}
