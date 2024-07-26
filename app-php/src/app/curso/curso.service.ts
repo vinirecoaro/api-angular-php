@@ -1,8 +1,8 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map } from 'rxjs/operators'
+import { catchError, map } from 'rxjs/operators'
 import { Curso } from './curso';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -28,16 +28,20 @@ export class CursoService {
     )
   }
   
-  //Cadastrar Curso
-  cadastrarCurso(c:Curso) : Observable<Curso[]>{
-    return this.http.post<CursoResponse>(this.url+'cadastrar', {curso:c})
-    .pipe(
-      map((res) => {
-        this.vetor.push(...res.cursos);
-        return this.vetor;
-      })
-    )
+  cadastrarCurso(c: Curso): Observable<Curso[]> {
+    return this.http.post<{ cursos: Curso[] }>(this.url + 'cadastrar', { curso: c })
+      .pipe(
+        map((res) => {
+          this.vetor.push(...res.cursos);
+          return this.vetor;
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Erro no serviço cadastrarCurso:', error);
+          return throwError(error);
+        })
+      );
   }
+  
 
 //Remover curso
 removerCurso(c: Curso): Observable<Curso[]> {
@@ -46,32 +50,49 @@ removerCurso(c: Curso): Observable<Curso[]> {
   if (c.idCurso !== null && c.idCurso !== undefined) {
     params = params.set("idCurso", c.idCurso.toString());
   } else {
-    // Trate o caso onde idCurso é null ou undefined
     return new Observable<Curso[]>((observer) => {
       observer.error(new Error('idCurso é null ou undefined'));
       observer.complete();
     });
   }
 
-  return this.http.delete<{ sucesso: boolean }>(this.url + 'excluir', { params: params })
+  return this.http.delete<{ sucesso: boolean, mensagem?: string }>(this.url + 'excluir', { params: params })
     .pipe(
       map((res) => {
         if (res.sucesso) {
-          // Filtra o vetor para remover o curso com o idCurso correspondente
-          this.vetor = this.vetor.filter((curso) => {
-            return curso.idCurso !== c.idCurso;
-          });
+          this.vetor = this.vetor.filter((curso) => curso.idCurso !== c.idCurso);
+        } else {
+          console.error(res.mensagem);
         }
+        return this.vetor;
+      }),
+      catchError(error => {
+        console.error('Error removing course:', error);
+        return throwError(error);
+      })
+    );
+}
+
+atualizarCurso(c: Curso): Observable<Curso[]> {
+  // Executa a alteração via URL
+  return this.http.put<{ cursos: Curso[] }>(this.url + 'alterar', { cursos: c })
+    .pipe(
+      map((res) => {
+        const cursoAlterado = this.vetor.find((item) => item.idCurso === c.idCurso);
+
+        // Alterar o valor do vetor local
+        if (cursoAlterado) {
+          cursoAlterado.nomeCurso = c.nomeCurso;
+          cursoAlterado.valorCurso = c.valorCurso;
+        }
+
+        // Retorno
         return this.vetor;
       })
     );
 }
 
-
 }
 
-interface CursoResponse {
-  cursos : Curso[];
-}
 
 
